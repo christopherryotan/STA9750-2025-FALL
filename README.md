@@ -1,2 +1,2 @@
 # STA9750-2025-FALL
-Projects from STA9750 - Fall 2024
+Projects from STA9750 - Fall 2025
