@@ -1,7 +1,8 @@
-## Mini-Project 0 {#mini-project-0}
-- **Goal:** Project Set-up for STA9750
+## Mini-Project #0 {#mini-project-00}
+<div class="project-block fade-section">
 
-### Preview
+- **Goal:** Project Set-up for STA9750  
+
 <div class="mp-embed">
   <iframe
     src="index.html"
@@ -12,3 +13,39 @@
   ></iframe>
 </div>
 
+</div>
+
+
+## Mini-Project #1 {#mini-project-01}
+<div class="project-block fade-section">
+
+- **Goal:** Analyze Netflix's Top 10 data to identify the most popular programming on the platform.
+
+<div class="mp-embed">
+  <iframe
+    src=""
+    title="Mini-Project 1 Preview"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+  ></iframe>
+</div>
+
+</div>
+
+```{=html}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    },
+    { threshold: 0.2 }
+  );
+  document.querySelectorAll(".fade-section").forEach(el => observer.observe(el));
+});
+</script>
