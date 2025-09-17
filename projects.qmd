@@ -1,0 +1,14 @@
+## Mini-Project 0 {#mini-project-0}
+- **Goal:** Project Set-up for STA9750
+
+### Preview
+<div class="mp-embed">
+  <iframe
+    src="index.html"
+    title="Mini-Project 0 Preview"
+    loading="lazy"
+    referrerpolicy="no-referrer"
+    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+  ></iframe>
+</div>
+

@@ -3,18 +3,22 @@ project:
   output-dir: docs
 
 website:
-  title: "STA 9750 Submission Material"
-  description:
-    Course Projects for STA 9750 at Baruch College
-  site-url: "https://christopherryotan.github.io/STA9750-2025-FALL/"
   navbar:
-    background: primary
-    search: false
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Projects"
+        href: projects.qmd
     
+  page-footer:
+    right:
+      - icon: github
+        href: https://github.com/christopherryotan/STA9750-2025-FALL
+      - icon: linkedin
+        href: https://www.linkedin.com/in/christopher-tan-8a9538236/
+
 format:
   html:
-    theme: cosmo
-    toc: false
-
-editor:
-  mode: source
+    css: styles.css
+    toc: true
+    smooth-scroll: true

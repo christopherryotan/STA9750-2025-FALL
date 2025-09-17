@@ -1,0 +1,90 @@
+.nav-footer .nav-footer-right .bi {
+  font-size: 2.2rem !important;   
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.nav-footer .nav-footer-left {
+  font-size: 1rem;      
+  font-weight: 500;       
+  color: #444;           
+}
+
+.nav-footer .nav-footer-right a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 .35rem;
+}
+
+.nav-footer .nav-footer-right .bi:hover {
+  transform: scale(1.06);
+  transition: transform .15s ease;
+}
+
+/* --- Always-expanded, horizontally scrollable navbar --- */
+
+/* Hide the hamburger button */
+.navbar .navbar-toggler {
+  display: none !important;
+}
+
+/* Force the collapsed area to stay open as a flex row */
+.navbar .navbar-collapse {
+  display: flex !important;
+  flex-basis: auto !important;
+}
+
+/* Make the nav items lay out in a row and scroll on small screens */
+.navbar .navbar-nav {
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  gap: .25rem;
+  scrollbar-width: thin; /* Firefox */
+}
+
+/* Optional: nicer spacing for links */
+.navbar .nav-link,
+.navbar .dropdown-toggle {
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+}
+
+/* Optional: subtle hover/focus */
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+  background: rgba(0,0,0,.06);
+}
+
+/* Optional: minimal scrollbar styling for WebKit */
+.navbar .navbar-nav::-webkit-scrollbar {
+  height: 6px;
+}
+.navbar .navbar-nav::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.2);
+  border-radius: 3px;
+}
+
+
+/* Responsive iframe container; adjust padding-top for different ratios */
+.mp-embed {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;   /* optional: keep it from getting too wide */
+  margin: 0 auto 1rem; /* center + spacing */
+  padding-top: 56.25%; /* 16:9; for 3:2 use 66.66%, for 4:3 use 75% */
+}
+
+.mp-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--bs-border-color, #ddd);
+  border-radius: 12px;
+  background: white;
+}
+
