@@ -157,4 +157,13 @@ a:hover {
   transform: translateY(0);
 }
 
+/* about-text for about page */
+.about-text {
+  max-width: 960px;          /* keeps lines from stretching too wide */
+  margin: 2rem auto;         /* centers on page with breathing room */
+  font-size: 1.15rem;        /* bigger than default body */
+  line-height: 1.8;          /* more comfortable spacing between lines */
+  letter-spacing: 0.2px;     /* subtle spacing for readability */
+}
+
 

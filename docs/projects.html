@@ -140,6 +140,7 @@ ul.task-list li input[type="checkbox"] {
 <p><iframe src="" title="Mini-Project 1 Preview" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe></p>
 </div>
 </div>
+<!-- For fade transition -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const observer = new IntersectionObserver(
@@ -147,6 +148,9 @@ document.addEventListener("DOMContentLoaded", () => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add("visible");
+        }
+        else {
+          entry.target.classList.remove("visible");
         }
       });
     },
