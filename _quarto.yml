@@ -7,8 +7,10 @@ website:
     left:
       - text: "Home"
         href: index.qmd
-      - text: "Projects"
+      - text: "Portfolio"
         href: projects.qmd
+      - text: "Mini-Project #1"
+        href: mp01.qmd
     
   page-footer:
     right:

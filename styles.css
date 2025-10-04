@@ -166,4 +166,12 @@ a:hover {
   letter-spacing: 0.2px;     /* subtle spacing for readability */
 }
 
+/* change text color for warnings and messages */
+pre code {
+  color: white 
+}
+
+.dataTables_wrapper {
+  color: #ffffff !important;        /* White text */
+}
 

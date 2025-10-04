@@ -23,7 +23,7 @@
 
 <div class="mp-embed">
   <iframe
-    src=""
+    src="mp01.html"
     title="Mini-Project 1 Preview"
     loading="lazy"
     referrerpolicy="no-referrer"
