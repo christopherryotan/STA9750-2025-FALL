@@ -13,7 +13,7 @@ execute:
 
 ## Objective
 
-For this assignment, we are given the task of analyzing Netflix's `GLOBAL_TOP_10` and `COUNTRY_TOP_10`. Below we acquire, clean, and explore the data, then answer exploratory questions and draft press releases.
+For this assignment, we are given the task of analyzing Netflix's Global Top 10 and Country Top 10 datasets. Below we will acquire, clean, and explore the data, then answer exploratory questions and draft press releases.
 
 ## Acquire Data
 
