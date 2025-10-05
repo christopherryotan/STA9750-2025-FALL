@@ -36,7 +36,7 @@ if (!file.exists(COUNTRY_TOP_10_FILENAME)) {
 ```
 
 ## Data Import
-```{r}
+```{r message=FALSE, warning=FALSE}
 if (!require("tidyverse")) install.packages("tidyverse")
 library(readr)
 library(dplyr)
@@ -103,14 +103,14 @@ GLOBAL_TOP_10 |>
 ```
 
 ## Exploratory Questions
-1. How many different countries does Netflix operate in? 
+### 1. How many different countries does Netflix operate in? 
 ```{r}
 countries <- COUNTRY_TOP_10 |> 
   summarise(num_countries = n_distinct(country_name))
 ```
 Netflix operates in **`r countries`** countries.
 
-2. Which non-English-language film has spent the most cumulative weeks in the global top 10? How many weeks did it spend?
+### 2. Which non-English-language film has spent the most cumulative weeks in the global top 10? How many weeks did it spend?
 ```{r}
 nonEnglish <- GLOBAL_TOP_10 |> 
   filter(category == "Films (Non-English)") |>
@@ -121,7 +121,7 @@ nonEnglish <- GLOBAL_TOP_10 |>
 The non-English film with the most cumulative weeks in the global Top 10 is **`r nonEnglish$show_title`**, 
 with **`r nonEnglish$cumulative_weeks_in_top_10`** weeks.
 
-3. What is the longest film (English or non-English) to have ever appeared in the Netflix global Top 10? How long is it in minutes?
+### 3. What is the longest film (English or non-English) to have ever appeared in the Netflix global Top 10? How long is it in minutes?
 ```{r}
 longest <- GLOBAL_TOP_10 |>
   filter(str_detect(category, "Films")) |>
@@ -132,7 +132,7 @@ longest <- GLOBAL_TOP_10 |>
 ```
 The longest film to have ever appeared in the Netflix global Top 10 was **`r longest$show_title`** with **`r round(longest$runtime_minutes)`** minutes.
 
-4. For each of the four categories, what program has the most total hours of global viewership?
+### 4. For each of the four categories, what program has the most total hours of global viewership?
 ```{r}
 top_by_category <- GLOBAL_TOP_10 |>
   group_by(category, show_title) |>
@@ -143,18 +143,18 @@ top_by_category <- GLOBAL_TOP_10 |>
 ```
 The programs with the most total hours of global viewership are **`r top_by_category$show_title[top_by_category$category == "Films (English)"]`** for English films, **`r top_by_category$show_title[top_by_category$category == "Films (Non-English)"]`** for non-English films, **`r top_by_category$show_title[top_by_category$category == "TV (English)"]`** for English TV, and **`r top_by_category$show_title[top_by_category$category == "TV (Non-English)"]`** for non-English TV.
 
-5. Which TV show had the longest run in a country’s Top 10? How long was this run and in what country did it occur?
+### 5. Which TV show had the longest run in a country’s Top 10? How long was this run and in what country did it occur?
 ```{r}
 longest_tv_run <- COUNTRY_TOP_10 |>
   filter(category == "TV") |>
   group_by(country_name, show_title) |>
   summarise(longest_run = max(cumulative_weeks_in_top_10, na.rm = TRUE), .groups = "drop") |>
   arrange(desc(longest_run)) |>
-  slice(1)   # Keep only the very top entry
+  slice(1)   
 ```
 The TV show that had the longest run in a country’s Top 10 is **`r longest_tv_run$show_title`**, which appeared in **`r longest_tv_run$country_name`**  for **`r longest_tv_run$longest_run`** weeks.
 
-6. Netflix provides over 200 weeks of service history for all but one country in our data set. Which country is this and when did Netflix cease operations in that country?
+### 6. Netflix provides over 200 weeks of service history for all but one country in our data set. Which country is this and when did Netflix cease operations in that country?
 ```{r}
 dropped_country <- COUNTRY_TOP_10 |>
   group_by(country_name) |>
@@ -164,7 +164,7 @@ dropped_country <- COUNTRY_TOP_10 |>
 ```
 The country where Netflix ceased operations the earliest is **`r dropped_country$country_name`**, in the week of **`r dropped_country$max_week`**.
 
-7. What is the total viewership of the TV show Squid Game? Note that there are three seasons total and we are looking for the total number of hours watched across all seasons.
+### 7. What is the total viewership of the TV show Squid Game? Note that there are three seasons total and we are looking for the total number of hours watched across all seasons.
 ```{r}
 squid_game_viewership <- GLOBAL_TOP_10 |>
   filter(str_detect(show_title, "Squid Game")) |>
@@ -172,7 +172,7 @@ squid_game_viewership <- GLOBAL_TOP_10 |>
 ```
 The total viewership of the TV show *Squid Game* across all seasons is **`r scales::comma(squid_game_viewership$total_hours)`** hours.
 
-8. The movie Red Notice has a runtime of 1 hour and 58 minutes. Approximately how many views did it receive in 2021?
+### 8. The movie Red Notice has a runtime of 1 hour and 58 minutes. Approximately how many views did it receive in 2021?
 ```{r}
 red_notice_views_2021 <- GLOBAL_TOP_10 |>
   filter(show_title == "Red Notice", year(week) == 2021) |>
@@ -181,7 +181,7 @@ red_notice_views_2021 <- GLOBAL_TOP_10 |>
 ```
 The movie *Red Notice* received approximately **`r scales::comma(red_notice_views_2021$total_views)`** views in 2021.
 
-9. How many Films reached Number 1 in the US but did not originally debut there? 
+### 9. How many Films reached Number 1 in the US but did not originally debut there? 
 ```{r}
 library(dplyr)
 library(stringr)
@@ -213,7 +213,7 @@ latest_when <- latest_row$last_week_one
 A total of **`r films_count`** films reached Number 1 in the United States **after** debuting below the top spot.  
 The most recent film to do this was **`r latest_film`**, which reached **Number 1** on **`r latest_when`**.
 
-10. Which TV show/season hit the top 10 in the most countries in its debut week? In how many countries did it chart?
+### 10. Which TV show/season hit the top 10 in the most countries in its debut week? In how many countries did it chart?
 ```{r}
 library(dplyr)
 library(stringr)
@@ -240,11 +240,108 @@ top_week      <- tv_debut_spread$debut_week
 The TV show/season that hit the Top 10 in the most countries in its debut week was **`r top_title` — `r top_season`**, charting in **`r top_countries`** countries during the week of **`r top_week`**.
 
 ## Press Releases
-### Stranger Things Season 5: The Global Phenomenon Returns
-Netflix proudly announces the upcoming fifth and final season of Stranger Things, one of the most-watched English-language TV shows in the platform’s history. Across its previous four seasons, the series has amassed over 2.9 billion total viewing hours, proving its unmatched global appeal. Stranger Things held a spot in the Top 10 for more than 350 weeks worldwide, appearing in over 90 countries. While other major hits like Wednesday and The Witcher have seen massive success, Stranger Things continues to lead as the gold standard for global engagement and storytelling. Fans everywhere are eagerly awaiting the final showdown in Hawkins later this year.
+
+```{r}
+# Global table uses "TV (English)" for the category.
+st_global <- GLOBAL_TOP_10 |>
+  filter(category == "TV (English)",
+         str_detect(show_title, regex("^Stranger Things$", ignore_case = TRUE)))
+
+st_total_hours <- sum(st_global$weekly_hours_viewed, na.rm = TRUE)  # FACT 1
+st_total_weeks <- nrow(st_global)                                   # FACT 2
+
+# Country table uses "TV" (no language tag). Count unique countries.
+st_countries <- COUNTRY_TOP_10 |>
+  filter(category == "TV",
+         str_detect(show_title, regex("^Stranger Things$", ignore_case = TRUE)))
+
+st_num_countries <- st_countries |>
+  distinct(country_name) |>
+  nrow()                                                            # FACT 3
+
+# Compare against other English-language TV series by total hours viewed
+tv_eng_totals <- GLOBAL_TOP_10 |>
+  filter(category == "TV (English)") |>
+  group_by(show_title) |>
+  summarise(total_hours = sum(weekly_hours_viewed, na.rm = TRUE), .groups = "drop") |>
+  arrange(desc(total_hours))
+
+st_rank <- tv_eng_totals |>
+  mutate(rank = dense_rank(desc(total_hours))) |>
+  filter(show_title == "Stranger Things") |>
+  pull(rank)
+
+second_place  <- tv_eng_totals |> slice(2)
+second_show   <- second_place$show_title
+second_hours  <- second_place$total_hours
+```
+
+### Stranger Things Season 5: The Resurgence of a Legacy
+Netflix’s *Stranger Things* remains a once-in-a-generation hit as many await its final release in November 2025. Across its first four seasons, the series has amassed **`r format(st_total_hours, big.mark = ",")`** hours viewed globally, spent **`r st_total_weeks`** weeks in the **Global Top 10**, and charted in **`r st_num_countries`** countries. Among English-language TV series by total hours viewed, it ranks **#`r st_rank`**, ahead of hits like **`r second_show`** (**`r format(second_hours, big.mark = ",")`** hours), underscoring extraordinary staying power and worldwide appeal ahead of the final season.
+
+
+```{r}
+# Identify Hindi-language titles 
+hindi_global <- GLOBAL_TOP_10 |>
+  filter(category %in% c("Films (Non-English)", "TV (Non-English)"),
+         str_detect(show_title, regex("Hindi|India", ignore_case = TRUE)))
+
+# Aggregate total hours viewed globally 
+hindi_total_hours <- sum(hindi_global$weekly_hours_viewed, na.rm = TRUE)
+
+# Find top Hindi titles by global hours viewed
+top_hindi <- hindi_global |>
+  group_by(show_title) |>
+  summarise(total_hours = sum(weekly_hours_viewed, na.rm = TRUE), .groups = "drop") |>
+  arrange(desc(total_hours)) |>
+  slice_head(n = 3)
+
+top_hindi_1  <- top_hindi$show_title[1]
+top_hindi_1h <- top_hindi$total_hours[1]
+top_hindi_2  <- top_hindi$show_title[2]
+top_hindi_2h <- top_hindi$total_hours[2]
+top_hindi_3  <- top_hindi$show_title[3]
+top_hindi_3h <- top_hindi$total_hours[3]
+
+# Estimate the number of unique Hindi titles appearing in the dataset
+hindi_title_count <- n_distinct(hindi_global$show_title)
+
+# Estimate number of Hindi entries (viewing records)
+hindi_records <- nrow(hindi_global)
+
+```
 
 ### Netflix Celebrates Blockbuster Growth in India
-India’s love for local storytelling continues to fuel Netflix’s growth in the region. Hindi-language films and TV shows have now spent over 200 weeks in India’s Top 10 charts, with recent hits like The Secret of Devkaali, achieving record-breaking viewership. Total hours viewed in India have surpassed 180 million, showing an expanding subscriber base and rising engagement across the country. With India now recognized as one of Netflix’s fastest-growing markets, the company continues to invest in local productions that connect deeply with audiences at home and abroad.
+India’s love for local storytelling continues to fuel Netflix’s remarkable rise in South Asia. Over the past two years, Hindi-language films and series have generated more than **`r format(hindi_total_hours, big.mark = ",")`** hours viewed worldwide. Among these titles, hits like **`r top_hindi_1`** (**`r format(top_hindi_1h, big.mark = ",")`** hours), **`r top_hindi_2`** (**`r format(top_hindi_2h, big.mark = ",")`** hours), and **`r top_hindi_3`** (**`r format(top_hindi_3h, big.mark = ",")`** hours) have captivated audiences at home as well as overseas. With over **`r hindi_title_count`** Hindi-language titles appearing in the global Top 10 across **`r hindi_records`** charting weeks, Netflix continues to deepen its investment in local content — cementing India as one of its fastest-growing creative and consumer markets.
 
-### Japan’s Thrillers Take Center Stage on Netflix
-Netflix Japan is riding a wave of suspense-driven storytelling, as homegrown thrillers climb the global charts. Titles such as Exit 8 have captivated millions with it's blend of psychological and cinematic tension. In 2025, Japanese thrillers appeared in the Top 10 across more than 70 countries, marking a record year for international engagement. Viewers are drawn to Japan’s unique ability to fuse quiet drama with gripping mystery, creating shows that stay in the global Top 10 for weeks at a time. As Netflix invests further in Japan’s thriller genre, these stories continue to prove that intrigue knows no language barrier.
+
+```{r}
+jp_global <- GLOBAL_TOP_10 |> 
+  filter(category %in% c("Films (Non-English)", "TV (Non-English)")) |> 
+  filter(str_detect(show_title, regex("Japan|Japanese|の|アニメ|ドラマ|Tokyo|Naruto|One Piece|Jujutsu Kaisen|Demon Slayer|Spirited Away|Ghibli|Boruto", ignore_case = TRUE)))
+
+# Compute totals
+jp_total_hours <- sum(jp_global$weekly_hours_viewed, na.rm = TRUE)
+jp_title_count <- n_distinct(jp_global$show_title)
+jp_records <- nrow(jp_global)
+
+# Find top 3 Japanese titles by total hours viewed
+top_jp <- jp_global |> 
+  group_by(show_title) |> 
+  summarise(total_hours = sum(weekly_hours_viewed, na.rm = TRUE), .groups = "drop") |> 
+  arrange(desc(total_hours)) |> 
+  slice_head(n = 3)
+
+top_jp_1  <- top_jp$show_title[1]
+top_jp_1h <- top_jp$total_hours[1]
+top_jp_2  <- top_jp$show_title[2]
+top_jp_2h <- top_jp$total_hours[2]
+top_jp_3  <- top_jp$show_title[3]
+top_jp_3h <- top_jp$total_hours[3]
+
+```
+
+### The Global Appeal of Japanese Storytelling  
+Japanese films and series are finding fans in every corner of the world. From touching dramas to breathtaking anime, stories from Japan continue to draw in global audiences with their emotion, imagination, and artistry. Over the past few years, viewers have spent more than **`r format(jp_total_hours, big.mark = ",")`** hours watching Japanese titles on Netflix. Fan favorites like **`r top_jp_1`** (**`r format(top_jp_1h, big.mark = ",")`** hours), **`r top_jp_2`** (**`r format(top_jp_2h, big.mark = ",")`** hours), and **`r top_jp_3`** (**`r format(top_jp_3h, big.mark = ",")`** hours) continue to reach new audiences and showcase the creativity of Japanese storytellers. With more than **`r jp_title_count`** Japanese titles appearing in the Top 10 across **`r jp_records`** charting weeks, Netflix’s collaboration with Japan’s creators is helping share their stories with millions of viewers around the world.
+
+

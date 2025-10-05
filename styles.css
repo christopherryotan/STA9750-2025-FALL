@@ -175,3 +175,10 @@ pre code {
   color: #ffffff !important;        /* White text */
 }
 
+.dataTables_length select {
+  background-color: #142537 !important;  /* dark navy-blue background */
+  color: #ffffff !important;             /* white text */
+  border: 1px solid #142537 !important;  /* subtle blue border */
+  border-radius: 4px;
+  padding: 2px 5px;
+}
