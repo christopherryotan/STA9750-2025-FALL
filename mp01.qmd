@@ -3,12 +3,12 @@ title: "Mini-Project #1 - Netflix Top 10"
 format:
   html:
     css: styles.css
-    code-fold: false
+    code-fold: true
     code-tools: true
     code-summary: "Show code"
 execute:
-  warning: true
-  message: true
+  warning: false
+  message: false
 ---
 
 ## Objective
