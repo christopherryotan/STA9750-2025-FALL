@@ -1,0 +1,226 @@
+---
+title: "Mini-Project #3 - Visualizing and Maintaining the Green Canopy of NYC"
+format:
+  html:
+    css: styles.css
+    code-fold: true
+    code-tools: true
+    code-summary: "Show code"
+execute:
+  warning: false
+  message: false
+---
+## Data Acquisition
+```{r}
+library(sf)
+library(dplyr)
+library(httr2)
+library(ggplot2)
+library(DT)
+
+# download from NYC City Council District website
+download.file(
+url = "https://s-media.nyc.gov/agencies/dcp/assets/files/zip/data-tools/bytes/city-council/nycc_25c.zip", 
+dest = "data/mp03/nycc_25c.zip", 
+mode = "wb")
+
+#unzip in same directory
+unzip("data/mp03/nycc_25c.zip", exdir = "data/mp03")
+
+#read shp file to DATA
+DATA <- st_read("data/mp03/nycc_25c/nycc.shp")
+
+#transforms district boundaries to a more standard system
+DATA <- st_transform(DATA, crs = "WGS84")
+
+#return to user
+DATA
+```
+
+```{r}
+# Task 2: Download NYC Tree Points via API and return a single sf object
+download_tree_points <- function(
+  data_dir = "data/mp03",
+  base_url = "https://data.cityofnewyork.us/resource/hn5i-inap.geojson", # <- GeoJSON API
+  limit    = 50000  # rows per page
+) {
+
+  # Ensure directory exists
+  dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+
+  page      <- 0L
+  all_files <- character()
+
+  repeat {
+    offset   <- page * limit
+    file_out <- file.path(
+      data_dir,
+      sprintf("tree_points_%06d.geojson", offset)
+    )
+
+    # Only download if file not already present (polite usage)
+    if (!file.exists(file_out)) {
+      message("Downloading trees with offset = ", offset)
+
+      resp <- request(base_url) |>
+        req_url_query(
+          `$limit`  = limit,
+          `$offset` = offset
+        ) |>
+        req_perform()
+
+      # Save raw GeoJSON to disk
+      writeBin(resp_body_raw(resp), file_out)
+    } else {
+      message("Skipping offset = ", offset, " (file already exists)")
+    }
+
+    # Read this page once to check how many rows we got
+    this_sf <- st_read(file_out, quiet = TRUE)
+    n_rows  <- nrow(this_sf)
+
+    if (n_rows == 0) {
+      message("No rows returned at offset = ", offset, " — stopping.")
+      file.remove(file_out)
+      break
+    }
+
+    all_files <- c(all_files, file_out)
+
+    if (n_rows < limit) {
+      message("Last page reached with ", n_rows, " rows at offset = ", offset)
+      break
+    }
+
+    page <- page + 1L
+  }
+
+  # Read all saved GeoJSON files and combine into one sf object
+  trees_list <- lapply(all_files, st_read, quiet = TRUE)
+  trees_sf   <- bind_rows(trees_list)
+
+  # Make sure CRS matches council districts (DATA from Task 1)
+  trees_sf <- st_transform(trees_sf, st_crs(DATA))
+
+  trees_sf
+}
+
+tree_points <- download_tree_points()
+```
+
+## Data Integration and Initial Exploration
+```{r}
+ggplot() +
+  geom_sf(data = DATA, fill = NA, color = "grey50", linewidth = 0.2) +
+  geom_sf(data = tree_points, size = 0.1, alpha = 0.3, color = "darkgreen") +
+  coord_sf() +
+  labs(
+    title    = "NYC Trees and City Council Districts",
+    x = NULL, y = NULL
+  ) +
+  theme_minimal()
+```
+
+### 1. Which council district has the most trees?
+```{r}
+trees_with_districts |>
+  st_drop_geometry() |>
+  count(CounDist, name = "n_trees") |>
+  arrange(desc(n_trees)) |>
+  slice_head(n = 1) |>
+  rename(`Council District` = CounDist,`Number of Trees`  = n_trees)
+
+```
+
+## 2. Which council district has the highest density of trees? 
+```{r}
+# 1. Get district areas
+district_area <- DATA |>
+  st_drop_geometry() |>
+  select(CounDist, Shape_Area)
+
+# 2. Count trees per district FIRST
+trees_by_district <- trees_with_districts |>
+  st_drop_geometry() |>
+  count(CounDist, name = "n_trees")
+
+# 3. Join counts + area → compute density
+trees_by_district |>
+  left_join(district_area, by = "CounDist") |>
+  mutate(tree_density = n_trees / Shape_Area) |>
+  arrange(desc(tree_density)) |>
+  slice_head(n = 1) |>
+  rename(
+    `Council District` = CounDist,
+    `Tree Density`     = tree_density,
+    `Area` = Shape_Area,
+    `Number of Trees` = n_trees
+  )
+```
+
+## 3. Which district has highest fraction of dead trees out of all trees?
+```{r}
+trees_with_districts |>
+  st_drop_geometry() |>
+  mutate(is_dead = tpcondition == "Dead") |>
+  group_by(CounDist) |>
+  summarise(
+    total_trees = n(),
+    dead_trees  = sum(is_dead, na.rm = TRUE),
+    frac_dead   = dead_trees / total_trees
+  ) |>
+  arrange(desc(frac_dead)) |>
+  slice_head(n = 1) |>
+  rename(
+    `Council District` = CounDist,
+    `Fraction Dead`    = frac_dead,
+    `Dead Trees`       = dead_trees,
+    `Total Trees`      = total_trees
+  )
+
+```
+
+## 4. What is the most common tree species in Manhattan?
+```{r}
+trees_with_borough <- trees_with_districts |>
+  mutate(
+    dist_num = as.integer(CounDist),
+    borough = case_when(
+      dist_num >=  1 & dist_num <= 10 ~ "Manhattan",
+      dist_num >= 11 & dist_num <= 18 ~ "Bronx",
+      dist_num >= 19 & dist_num <= 32 ~ "Queens",
+      dist_num >= 33 & dist_num <= 48 ~ "Brooklyn",
+      dist_num >= 49 & dist_num <= 51 ~ "Staten Island"
+    )
+  )
+
+trees_with_borough |>
+  filter(borough == "Manhattan") |>
+  st_drop_geometry() |>
+  count(genusspecies, sort = TRUE) |>
+  slice_head(n = 1) |>
+  rename(
+    `Most Common Species (Manhattan)` = genusspecies,
+    `Number of Trees`                 = n
+  )
+```
+
+## 5. What is the species of the tree closest to Baruch's campus?
+```{r}
+#| code-fold: true
+
+new_st_point <- function(lat, long){
+  st_sfc(st_point(c(long, lat))) |>
+    st_set_crs("WGS84")
+}
+
+baruch <- new_st_point(lat = 40.7403, lon = -73.9833)
+
+trees_with_borough |>
+  filter(borough == "Manhattan") |> 
+  select(geometry, genusspecies) |>
+  mutate(distance = st_distance(geometry, baruch)) |>
+  arrange(distance) |>
+  slice(1) |>
+  pull(genusspecies)
+```
