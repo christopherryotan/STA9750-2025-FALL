@@ -241,7 +241,7 @@ The species of the tree closest to Baruch's campus is "Liquidambar styraciflua -
 ## Task 5: NYC Parks Proposal
 
 ### Overview
-District 32 has a substantial amount of dead/unhealthy trees based on the 2024 Tree Census. Many of these trees run along many of the older residential blocks that get a lot of foot traffic but do not have much shade. Thus, this initiative will focus on removing unsafe trees and planting more resilient species.
+District 16 has a substantial amount of dead/unhealthy trees based on the 2024 Tree Census. Many of these trees run along many of the older residential blocks that get a lot of foot traffic but do not have much shade. Thus, this initiative will focus on removing unsafe trees and planting more resilient species.
 
 ### Quantitative Statement
 | Action                       | Quantity                 |             
