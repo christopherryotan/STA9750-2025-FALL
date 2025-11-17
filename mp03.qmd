@@ -425,4 +425,5 @@ m <- m |>
                       paste("District", district_ids)),
     options = layersControlOptions(collapsed = FALSE)
   )
+m
 ```
