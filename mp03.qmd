@@ -10,7 +10,11 @@ execute:
   warning: false
   message: false
 ---
+## Introduction
+This mini-project works to analyze NYC’s street trees by combining council district boundaries with detailed tree data from NYC OpenData. The goal is to visualize where trees are located, assess their condition and species patterns, and use these findings to propose a targeted improvement plan for one district supported by data and maps.
+
 ## Data Acquisition
+### Task 1: Download NYC City Council District Boundaries
 ```{r}
 library(sf)
 library(dplyr)
@@ -32,20 +36,17 @@ DATA <- st_read("data/mp03/nycc_25c/nycc.shp")
 
 #transforms district boundaries to a more standard system
 DATA <- st_transform(DATA, crs = "WGS84")
-
-#return to user
-DATA
 ```
 
+### Task 2: Download Tree Points
 ```{r}
-# Task 2: Download NYC Tree Points via API and return a single sf object
 download_tree_points <- function(
   data_dir = "data/mp03",
   base_url = "https://data.cityofnewyork.us/resource/hn5i-inap.geojson", # <- GeoJSON API
   limit    = 50000  # rows per page
 ) {
 
-  # Ensure directory exists
+  # make sure directory exists
   dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 
   page      <- 0L
@@ -109,6 +110,7 @@ tree_points <- download_tree_points()
 ```
 
 ## Data Integration and Initial Exploration
+### Task 3: Plot All Tree Points
 ```{r}
 ggplot() +
   geom_sf(data = DATA, fill = NA, color = "grey50", linewidth = 0.2) +
@@ -120,9 +122,16 @@ ggplot() +
   ) +
   theme_minimal()
 ```
-
-### 1. Which council district has the most trees?
+### Task 4: District-Level Analysis of Tree Coverage
+#### 1. Which council district has the most trees?
 ```{r}
+trees_with_districts <- st_join(
+  tree_points,
+  DATA,
+  join = st_intersects,
+  left = FALSE
+)
+
 trees_with_districts |>
   st_drop_geometry() |>
   count(CounDist, name = "n_trees") |>
@@ -131,8 +140,9 @@ trees_with_districts |>
   rename(`Council District` = CounDist,`Number of Trees`  = n_trees)
 
 ```
+The council district that has the most trees is District 51.
 
-## 2. Which council district has the highest density of trees? 
+#### 2. Which council district has the highest density of trees? 
 ```{r}
 # 1. Get district areas
 district_area <- DATA |>
@@ -157,8 +167,9 @@ trees_by_district |>
     `Number of Trees` = n_trees
   )
 ```
+The council district that has the highest density of trees is District 7.
 
-## 3. Which district has highest fraction of dead trees out of all trees?
+#### 3. Which district has highest fraction of dead trees out of all trees?
 ```{r}
 trees_with_districts |>
   st_drop_geometry() |>
@@ -179,8 +190,9 @@ trees_with_districts |>
   )
 
 ```
+The district that has the highest fraction of dead trees out of all trees is District 32.
 
-## 4. What is the most common tree species in Manhattan?
+#### 4. What is the most common tree species in Manhattan?
 ```{r}
 trees_with_borough <- trees_with_districts |>
   mutate(
@@ -204,14 +216,14 @@ trees_with_borough |>
     `Number of Trees`                 = n
   )
 ```
+The most common tree species in Manhattan is Gleditsia triacanthos var. inermis - Thornless honeylocust.
 
-## 5. What is the species of the tree closest to Baruch's campus?
+#### 5. What is the species of the tree closest to Baruch's campus?
 ```{r}
-#| code-fold: true
+library(sf)
 
-new_st_point <- function(lat, long){
-  st_sfc(st_point(c(long, lat))) |>
-    st_set_crs("WGS84")
+new_st_point <- function(lat, lon) {
+  st_sfc(st_point(c(lon, lat)), crs = "WGS84")
 }
 
 baruch <- new_st_point(lat = 40.7403, lon = -73.9833)
@@ -223,4 +235,194 @@ trees_with_borough |>
   arrange(distance) |>
   slice(1) |>
   pull(genusspecies)
+```
+The species of the tree closest to Baruch's campus is "Liquidambar styraciflua - sweetgum".
+
+## Task 5: NYC Parks Proposal
+
+### Overview
+District 32 has a substantial amount of dead/unhealthy trees based on the 2024 Tree Census. Many of these trees run along many of the older residential blocks that get a lot of foot traffic but do not have much shade. Thus, this initiative will focus on removing unsafe trees and planting more resilient species.
+
+### Quantitative Statement
+| Action                       | Quantity                 |             
+|------------------------------|--------------------------|
+| Removing dead trees          | About 400                | 
+| New replacement plants       | Around 500               | 
+
+
+### Trees in District 16
+```{r}
+district_16 <- DATA |>
+dplyr::filter(CounDist == "16")
+
+trees_dist16 <- trees_with_districts |>
+dplyr::filter(CounDist == "16")
+
+bbox16 <- sf::st_bbox(district_16)
+
+ggplot() +
+  geom_sf(data = district_16,
+          fill = "grey95",
+          color = "black",
+          linewidth = 0.4) +
+  geom_sf(data = trees_dist16,
+          size  = 0.3,
+          alpha = 0.5,
+          color = "darkgreen") +
+  coord_sf(
+    xlim = c(bbox16["xmin"], bbox16["xmax"]),
+    ylim = c(bbox16["ymin"], bbox16["ymax"])
+  ) +
+  labs(
+    title = "Street Trees in District 16",
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title  = element_text(hjust = 0.5)  # <-- Center the title
+  )
+```
+### Quantitative Comparison
+District 16 has the highest dead-tree ratio among the four districts compared, with roughly 13% of its trees classified as dead or unhealthy. This is higher than District 14 (about 12%), District 3 (around 11%), and far above District 41 (about 7%). Even though these districts have similar overall tree counts, District 16 stands out for having the worst canopy health and the largest share of failing trees. This makes District 16 the district most in need of targeted removal and replacement efforts, supporting the justification for directing additional Parks Department resources toward improving tree conditions in this area.
+
+### Comparison Support
+To further support this comparison, I've constructed a bar chart comparing the dead tree ratios between districts 16, 3, 14, and 41.
+```{r}
+library(scales)
+compare_ids <- c(16, 14, 3, 41) #districts for further comparison
+
+dead_comp <- trees_with_districts |>
+st_drop_geometry() |>
+filter(CounDist %in% compare_ids) |>
+mutate(is_dead = tpcondition == "Dead") |>
+group_by(CounDist) |>
+summarise(
+total_trees = n(),
+dead_trees = sum(is_dead, na.rm = TRUE),
+dead_ratio = dead_trees / total_trees
+)
+
+ggplot(dead_comp, aes(x = factor(CounDist), y = dead_ratio, fill = factor(CounDist))) +
+  geom_col(width = 0.9, alpha = 2) +
+  scale_y_continuous(
+    labels = percent_format(),
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  labs(
+    title = "Dead Tree Ratio by Council District",
+    x = "Council District",
+    y = "Percent Dead Trees"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title      = element_text(hjust = 0.5)
+  )
+```
+
+### District 16 vs. District 14
+```{r}
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(patchwork)  # for p16 + p14 layout
+
+# helper to plot dead trees in a single district
+plot_dead_trees <- function(district_num) {
+  district <- DATA |>
+    filter(CounDist == district_num)
+
+  trees_dead <- trees_with_districts |>
+    filter(CounDist == district_num, tpcondition == "Dead")
+
+  ggplot() +
+    geom_sf(data = district,
+            fill = "grey95",
+            color = "black",
+            linewidth = 0.4) +
+    geom_sf(data = trees_dead,
+            size  = 0.5,
+            alpha = 0.6,
+            color = "red") +
+    coord_sf() +
+    labs(
+      title = paste("Dead Trees in District", district_num)
+    ) +
+    theme_void() +
+    theme(
+      plot.title = element_text(hjust = 0.5)
+    )
+}
+
+p16 <- plot_dead_trees(16)
+p14 <- plot_dead_trees(14)
+
+p16 + p14  # side-by-side comparison
+
+```
+The side-by-side maps show that District 16 has a much higher concentration of dead trees compared to District 14. Dead trees in District 16 appear in clear clusters across many residential blocks, while District 14 has fewer and more spread-out problem trees. This visual difference supports focusing removal and replacement efforts in District 16, since its higher number of failing trees impacts safety, shade, and overall canopy health.
+
+## Extra Credit
+### EC #01: Improved Tree Map Visualizations
+For improved visualization and legibility, I have segmented the map into their respective districts, allowing each one to be toggled on or off.
+```{r}
+library(leaflet)
+library(sf)
+library(dplyr)
+
+# 1. Use trees_with_districts, not tree_points
+trees_all <- trees_with_districts |>
+  st_transform(4326) |>
+  mutate(
+    lon = st_coordinates(geometry)[, 1],
+    lat = st_coordinates(geometry)[, 2]
+  )
+
+DATA_wgs <- DATA |>
+  st_transform(4326)
+
+# 2. Get the list of districts that actually have trees
+district_ids <- sort(unique(trees_all$CounDist))
+
+# 3. Base map with district boundaries
+m <- leaflet(options = leafletOptions(preferCanvas = TRUE)) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addPolygons(
+    data   = DATA_wgs,
+    fillColor = "transparent",
+    color     = "black",
+    weight    = 1,
+    group     = "District Boundaries",
+    label     = ~paste("District", CounDist)
+  )
+
+# 4. Add a layer per district
+for (d in district_ids) {
+  td <- trees_all |> filter(CounDist == d)
+  if (nrow(td) == 0L) next  # skip if no trees
+
+  m <- m |>
+    addCircleMarkers(
+      data        = td,
+      lng         = ~lon,
+      lat         = ~lat,
+      radius      = 1,
+      stroke      = FALSE,
+      fillColor   = "darkgreen",
+      fillOpacity = 0.4,
+      popup       = ~paste0("District: ", CounDist,
+                            "<br>Species: ", genusspecies),
+      group       = paste("District", d)
+    )
+}
+
+# 5. Layer control to toggle districts
+m <- m |>
+  addLayersControl(
+    overlayGroups = c("District Boundaries",
+                      paste("District", district_ids)),
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
